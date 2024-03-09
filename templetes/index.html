@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>공부보조프로그램</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.2/mqttws31.min.js" type="text/javascript"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js" type="text/javascript"></script>
+  <script src="./static/myChart.js" type="text/javascript"></script>
+  <script src="./static/mqttio14.js" type="text/javascript"></script>
+  <link rel="stylesheet" type="text/css" href="/static/indexstyle.css">
+  <script>
+    window.addEventListener("load", function () {
+      // http://224..129:8080/에서 224...의 IP만 끊어내는 코드
+      var url = new String(document.location);
+      ip = (url.split("//"))[1]; // ip = "224...:8080/"
+      ip = (ip.split(":"))[0]; // ip = "224..."
+      document.getElementById("broker").value = ip
+    });
+  </script>
+</head>
+<body>
+  <h1>공부 보조 프로그램</h1>
+  <nav style="">
+    <form id="connection-form">
+      <fieldset>
+        <legend id="login"><h3>로그인 연결</h3></legend>
+        <b>브로커 IP:</b><br>
+        <input id="broker" type="text" name="broker" value=""><br>
+        <b>포트 번호 :</b>
+        <input id="broker" type="text" name="broker" value="9001"><br>
+        <input type="button" onclick="connect()" value="Connect">
+        <input type="button" onclick="disconnect()" value="Disconnect">
+      </fieldset>
+    </form>
+    <fieldset>
+      <legend id="login"><h3>목차</h3></legend>
+      <ul>
+        <li><a href="#login">로그인</a></li>
+        <li><a href="#explain">프로그램 설명</a></li>
+        <li><a href="#study">학생 공부 여부</a></li>
+        <li><a href="#temp">방 안의 온습도</a></li>
+        <li><a href="#led">LED등 제어</a></li>
+      </ul>
+    </fieldset>
+  </nav>
+  <section>
+    <div class="manual" id="explain">
+      <h2>#  프로그램 설명 # </h2><h4>
+        이 프로그램은 학생이 공부하기에 최적화된 환경을 만들어 주기 위해 개발된 프로그램입니다.
+        <ul>
+          <li>로그인 박스에 IP와 포트 번호를 입력합니다.(자동입력됨)</li>
+          <li>현재 학생이 공부 중인지를 "공부 여부 check!" 버튼을 눌러 확인할 수 있습니다.</li>
+          <li>그래프 위에 있는 "온도 start!", "습도 start!" 버튼을 이용해 방안의 온습도 측정을 시작하세요.</li>
+          <li>그래프에 나타나는 온습도 상태를 확인하고, 온습도가 공부하기에 적합한 상태가 아니라면 조절해주세요!!</li>
+          <li>"메세지 창"에서는 접속 여부, 공부 측정 여부, 온도 측정 여부, 습도 측정 여부를 확인 할 수 있습니다.</li>
+          <li>학생이 책상에 앉으면 자동으로 스탠드가 켜지지만, 혹시 작동하지 않을 시에는 수동으로 작동 가능합니다.</li>
+        </ul></h4>
+    </div><br>
+    <div class="info-study" id="study">
+      <h3 id="temp">현재 학생의 공부 여부</h3>
+      <input type="button" onclick="subscribe('학생')" value="공부 여부 check!">
+      <input type="button" onclick="unsubscribe('학생')" value="공부 여부 stop!">
+      <p>
+        현재 <span id="topicName" style="text-align: center; font-size:20px; color:red"></span>
+        이 지금 공부를 <span id="message" style="font-size:20px; color:red"></span> 중입니다.
+      </p>
+    </div>
+  </section>
+  <footer>
+    <div class="info-box">
+      <div class="info-graph">
+        <h3 id="temp">방 안의 온습도</h3>
+        <hr>
+        <form id="measure-form">
+          <input type="button" onclick="subscribe('온도')" value="온도 start!">
+          <input type="button" onclick="unsubscribe('온도')" value="온도 stop!">
+          <input type="button" onclick="subscribe('습도')" value="습도 start!">
+          <input type="button" onclick="unsubscribe('습도')" value="습도 stop!">
+        </form>
+        <button id="hideshow" onclick="hideshow()">Hide/Show Chart</button>
+        <canvas id="canvas" width="600" height="400"></canvas><br><hr>
+        <h3 id="led">Led등 수동제어</h3>
+        <hr>
+        <form id="LED-control-form"><br>
+          <b><p style="color:red;font-size: 20px;">경고! 자동으로 LED가 실행되지 않을 시에만 사용하세요.</p></b><br>
+          <label>on <input type="radio" name="led" value="1" onchange="publish('led', this.value)"></label>
+          <label>off <input type="radio" name="led" value="0" checked onchange="publish('led', this.value)"><br><br></label>
+          <br>
+        </form>
+      </div>
+      <div class="info-history">
+        <h3>공부하기 적합한 온습도</h3><hr>
+        <input type="button" onclick="subscribe('Temp')" value="온도 check!">
+        <input type="button" onclick="subscribe('Humd')" value="습도 check!">
+          <!--<p style="text-align: left; color:blue;"> &emsp;&emsp;&emsp;&emsp;여름철</p>
+          <p>ㄴ> 공부하기 적합한 온도는 <span style="font-size:20px; color:red";>24~26도</span>입니다</p>
+          -->
+          <p style="text-align: left; color:blue;"> &emsp;&emsp;&emsp;&emsp;겨울철</p>
+          <p>ㄴ> 공부하기 적합한 온도는 <span style="font-size:20px; color:red";>18~21도</span>입니다</p>
+          <br>
+          <p>공부하기 적합한 습도는 <span style="font-size:20px; color:red";>40~60%</span>입니다</p><br>
+          <p>
+            
+            <span style="font-size:25px;";>온도</span> 
+             <span id="messageTemp" style="font-size:25px;"></span> ~
+          </p>
+          <p>
+            <span style="font-size:25px;";>습도</span> 
+             <span id="messageHumd" style="font-size:25px;"></span> ~
+          </p>
+          <hr>
+        <h3>메세지 창</h3><hr>
+        <div id="messages"></div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
