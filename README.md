@@ -1,0 +1,5 @@
+![image](https://github.com/seungjae708/Raspberry-pi-Mini-Project/assets/64647590/a50f737e-b477-4cfa-8fe4-6866b76290c4)
+![image](https://github.com/seungjae708/Raspberry-pi-Mini-Project/assets/64647590/7ae368b3-8671-4a03-9de1-ebd095bca072)
+![image](https://github.com/seungjae708/Raspberry-pi-Mini-Project/assets/64647590/5d2f03fb-a25c-44c0-aba4-615e38e983f4)
+![image](https://github.com/seungjae708/Raspberry-pi-Mini-Project/assets/64647590/c9b6e324-3751-4a25-b713-a51981ec18bc)
+![image](https://github.com/seungjae708/Raspberry-pi-Mini-Project/assets/64647590/39a0cc10-6014-46c6-9a99-813d48b779fa)
